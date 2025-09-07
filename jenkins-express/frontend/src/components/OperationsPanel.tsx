@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -11,13 +11,15 @@ import {
   Select,
   MenuItem,
   Divider,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
-  CheckCircle,
   List,
   Info,
   BugReport,
   Work,
+  Visibility,
 } from '@mui/icons-material';
 import { JenkinsJob } from '../types';
 
@@ -27,8 +29,7 @@ interface OperationsPanelProps {
   jobs: JenkinsJob[];
   selectedJob: string;
   onSelectedJobChange: (jobName: string) => void;
-  onTestConnection: () => void;
-  onListJobs: () => void;
+  onListJobs: (view?: string) => void;
   onGetJobDetails: (jobName: string) => void;
   onGetServerInfo: () => void;
   onGetDebugInfo: () => void;
@@ -40,12 +41,12 @@ const OperationsPanel: React.FC<OperationsPanelProps> = ({
   jobs,
   selectedJob,
   onSelectedJobChange,
-  onTestConnection,
   onListJobs,
   onGetJobDetails,
   onGetServerInfo,
   onGetDebugInfo,
 }) => {
+  const [viewName, setViewName] = useState('All');
   const handleJobDetailsClick = () => {
     if (selectedJob) {
       onGetJobDetails(selectedJob);
@@ -60,20 +61,27 @@ const OperationsPanel: React.FC<OperationsPanelProps> = ({
         </Typography>
         
         <Stack spacing={2}>
-          <Button
-            variant="outlined"
-            startIcon={<CheckCircle />}
-            onClick={onTestConnection}
-            disabled={!connected || loading}
+          <TextField
+            label="View"
+            value={viewName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setViewName(e.target.value)}
             fullWidth
-          >
-            Test Connection
-          </Button>
-          
+            size="small"
+            disabled={!connected || loading}
+            placeholder="All"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Visibility fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<List />}
-            onClick={onListJobs}
+            onClick={() => onListJobs(viewName)}
             disabled={!connected || loading}
             fullWidth
           >

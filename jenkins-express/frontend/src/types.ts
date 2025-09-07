@@ -17,6 +17,8 @@ export interface JobDetail {
   buildable: boolean;
   color: string;
   url: string;
+  pipelineScript?: string;
+  configXml?: string;
   lastBuild?: {
     number: number;
     url: string;

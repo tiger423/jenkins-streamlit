@@ -148,9 +148,16 @@ class JenkinsClient {
         }
     }
 
-    async getJobs() {
+    async getJobs(viewName = null) {
         try {
-            const [data, error] = await this.makeRequest("/api/json?tree=jobs[name,color,url,buildable,description]");
+            let endpoint;
+            if (viewName && viewName !== 'All' && viewName.trim() !== '') {
+                endpoint = `/view/${viewName}/api/json?tree=jobs[name,color,url,buildable,description]`;
+            } else {
+                endpoint = "/api/json?tree=jobs[name,color,url,buildable,description]";
+            }
+            
+            const [data, error] = await this.makeRequest(endpoint);
             if (error) {
                 return [null, `Error listing jobs: ${error}`];
             }
@@ -187,6 +194,23 @@ class JenkinsClient {
             return [response.data, null];
         } catch (error) {
             return [null, `Error getting job config: ${error.message}`];
+        }
+    }
+
+    async updateJobConfig(jobName, configXml) {
+        try {
+            const url = `${this.baseUrl.replace(/\/$/, '')}/job/${jobName}/config.xml`;
+            const response = await axios.post(url, configXml, {
+                headers: {
+                    ...this.authHeader,
+                    'Content-Type': 'application/xml'
+                },
+                timeout: 10000,
+                httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+            });
+            return [true, 'Job configuration updated successfully'];
+        } catch (error) {
+            return [false, `Error updating job config: ${error.message}`];
         }
     }
 
