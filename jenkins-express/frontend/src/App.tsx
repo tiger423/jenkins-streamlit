@@ -89,31 +89,12 @@ function App() {
     }
   };
 
-  const handleTestConnection = async () => {
+  const handleListJobs = async (view?: string) => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiClient.get('/api/test-connection');
-      if (response.data.success) {
-        setResults(response.data.data);
-      } else {
-        setError(response.data.message);
-        setResults(`❌ ${response.data.message}`);
-      }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'Test connection failed';
-      setError(errorMsg);
-      setResults(`❌ ${errorMsg}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleListJobs = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await apiClient.get('/api/jobs');
+      const params = view && view !== 'All' && view.trim() !== '' ? { view } : {};
+      const response = await apiClient.get('/api/jobs', { params });
       if (response.data.success) {
         setJobs(response.data.data);
         setResults(response.data.data);
@@ -136,12 +117,20 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}`);
-      if (response.data.success) {
-        setResults(response.data.data);
+      const [jobResponse, configResponse] = await Promise.all([
+        apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}`),
+        apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}/config`)
+      ]);
+      
+      if (jobResponse.data.success) {
+        const jobDetail = jobResponse.data.data;
+        if (configResponse.data.success) {
+          jobDetail.configXml = configResponse.data.data;
+        }
+        setResults(jobDetail);
       } else {
-        setError(response.data.message);
-        setResults(`❌ ${response.data.message}`);
+        setError(jobResponse.data.message);
+        setResults(`❌ ${jobResponse.data.message}`);
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to get job details';
@@ -227,7 +216,6 @@ function App() {
               jobs={jobs}
               selectedJob={selectedJob}
               onSelectedJobChange={setSelectedJob}
-              onTestConnection={handleTestConnection}
               onListJobs={handleListJobs}
               onGetJobDetails={handleGetJobDetails}
               onGetServerInfo={handleGetServerInfo}

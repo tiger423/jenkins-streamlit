@@ -10,8 +10,12 @@ import {
   Stack,
   InputAdornment,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Link, Person, Key } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Link, Person, Key, AccountCircle } from '@mui/icons-material';
 import { ConnectionStatus } from '../types';
 
 interface ConnectionPanelProps {
@@ -31,11 +35,21 @@ const ConnectionPanel: React.FC<ConnectionPanelProps> = ({
   const [username, setUsername] = useState('ve');
   const [password, setPassword] = useState('ve');
   const [showPassword, setShowPassword] = useState(false);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
 
   const handleConnect = () => {
     if (url && username && password) {
       onConnect(url, username, password);
+      setAccountDialogOpen(false);
     }
+  };
+
+  const handleAccountDialogOpen = () => {
+    setAccountDialogOpen(true);
+  };
+
+  const handleAccountDialogClose = () => {
+    setAccountDialogOpen(false);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -77,62 +91,27 @@ const ConnectionPanel: React.FC<ConnectionPanelProps> = ({
             }}
           />
           
-          <TextField
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyPress={handleKeyPress}
-            fullWidth
-            size="small"
-            disabled={connectionStatus.connected || loading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Person fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <TextField
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            fullWidth
-            size="small"
-            disabled={connectionStatus.connected || loading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Key fontSize="small" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                    size="small"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          
           <Stack direction="row" spacing={1}>
             {!connectionStatus.connected ? (
-              <Button
-                variant="contained"
-                onClick={handleConnect}
-                disabled={loading || !url || !username || !password}
-                fullWidth
-              >
-                {loading ? 'Connecting...' : 'Connect'}
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<AccountCircle />}
+                  onClick={handleAccountDialogOpen}
+                  disabled={loading}
+                  sx={{ flex: 1 }}
+                >
+                  Account
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleConnect}
+                  disabled={loading || !url || !username || !password}
+                  sx={{ flex: 2 }}
+                >
+                  {loading ? 'Connecting...' : 'Connect'}
+                </Button>
+              </>
             ) : (
               <Button
                 variant="outlined"
@@ -146,6 +125,67 @@ const ConnectionPanel: React.FC<ConnectionPanelProps> = ({
             )}
           </Stack>
         </Stack>
+
+        <Dialog open={accountDialogOpen} onClose={handleAccountDialogClose} maxWidth="sm" fullWidth>
+          <DialogTitle>Jenkins Account Credentials</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField
+                label="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyPress={handleKeyPress}
+                fullWidth
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              
+              <TextField
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                fullWidth
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Key fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        size="small"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleAccountDialogClose}>Cancel</Button>
+            <Button 
+              onClick={handleConnect} 
+              variant="contained"
+              disabled={!username || !password}
+            >
+              Save & Connect
+            </Button>
+          </DialogActions>
+        </Dialog>
       </CardContent>
     </Card>
   );

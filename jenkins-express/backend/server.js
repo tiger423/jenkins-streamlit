@@ -74,7 +74,8 @@ app.get('/api/jobs', async (req, res) => {
             });
         }
 
-        const [jobs, error] = await jenkinsClient.getJobs();
+        const { view } = req.query;
+        const [jobs, error] = await jenkinsClient.getJobs(view);
         if (error) {
             return res.status(500).json({ success: false, message: error });
         }
@@ -174,6 +175,32 @@ app.get('/api/debug-info', async (req, res) => {
         }
 
         res.json({ success: true, data: debugInfo });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: `Server error: ${error.message}` 
+        });
+    }
+});
+
+app.put('/api/jobs/:jobName/config', async (req, res) => {
+    try {
+        if (!jenkinsClient.isConnected()) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Not connected to Jenkins server' 
+            });
+        }
+
+        const { jobName } = req.params;
+        const { configXml } = req.body;
+        const [success, message] = await jenkinsClient.updateJobConfig(jobName, configXml);
+        
+        if (success) {
+            res.json({ success: true, message });
+        } else {
+            res.status(500).json({ success: false, message });
+        }
     } catch (error) {
         res.status(500).json({ 
             success: false, 
