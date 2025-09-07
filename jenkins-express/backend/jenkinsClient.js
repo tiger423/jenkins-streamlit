@@ -152,7 +152,8 @@ class JenkinsClient {
         try {
             let endpoint;
             if (viewName && viewName !== 'All' && viewName.trim() !== '') {
-                endpoint = `/view/${viewName}/api/json?tree=jobs[name,color,url,buildable,description]`;
+                const encodedViewName = encodeURIComponent(viewName);
+                endpoint = `/view/${encodedViewName}/api/json?tree=jobs[name,color,url,buildable,description]`;
             } else {
                 endpoint = "/api/json?tree=jobs[name,color,url,buildable,description]";
             }
