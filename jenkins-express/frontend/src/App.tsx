@@ -116,22 +116,29 @@ function App() {
     
     setLoading(true);
     setError('');
+    setResults(null);
+    
     try {
-      const [jobResponse, configResponse] = await Promise.all([
-        apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}`),
-        apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}/config`)
-      ]);
+      const jobResponse = await apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}`);
       
-      if (jobResponse.data.success) {
-        const jobDetail = jobResponse.data.data;
+      if (!jobResponse.data.success) {
+        setError(jobResponse.data.message);
+        setResults(`❌ ${jobResponse.data.message}`);
+        return;
+      }
+
+      const jobDetail = jobResponse.data.data;
+      
+      try {
+        const configResponse = await apiClient.get(`/api/jobs/${encodeURIComponent(jobName)}/config`);
         if (configResponse.data.success) {
           jobDetail.configXml = configResponse.data.data;
         }
-        setResults(jobDetail);
-      } else {
-        setError(jobResponse.data.message);
-        setResults(`❌ ${jobResponse.data.message}`);
+      } catch (configError) {
+        console.warn('Failed to fetch job config:', configError);
       }
+      
+      setResults(jobDetail);
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to get job details';
       setError(errorMsg);
